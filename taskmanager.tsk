@@ -1,4 +1,3 @@
-// TaskManager.tsx
 import { useEffect, useState } from 'react';
 import { SoneiumProvider, useWallet } from '@soneium/sdk';
 
