@@ -1,0 +1,93 @@
+// TaskManager.tsx
+import { useEffect, useState } from 'react';
+import { SoneiumProvider, useWallet } from '@soneium/sdk';
+
+const TaskManagerApp = () => {
+  const { connectWallet, walletAddress, signer } = useWallet();
+  const [tasks, setTasks] = useState<any[]>([]);
+  const [contract, setContract] = useState<any>(null);
+
+  useEffect(() => {
+    const initializeContract = async () => {
+      const contractABI = [...]; // ABI from compiled contract
+      const contractAddress = '0x...'; // Deployed contract address
+      const contract = new SoneiumContract(contractABI, contractAddress, signer);
+      setContract(contract);
+      loadTasks();
+    };
+
+    if (signer) initializeContract();
+  }, [signer]);
+
+  const loadTasks = async () => {
+    const taskCount = await contract.taskCount();
+    const loadedTasks = [];
+    
+    for (let i = 0; i < taskCount; i++) {
+      loadedTasks.push(await contract.tasks(i));
+    }
+    
+    setTasks(loadedTasks);
+  };
+
+  const createTask = async (description: string, bounty: number) => {
+    await contract.createTask(description, { value: bounty });
+    await loadTasks();
+  };
+
+  return (
+    <div className="container mx-auto p-4">
+      <button onClick={connectWallet} className="bg-blue-500 text-white p-2 rounded">
+        {walletAddress || 'Connect Wallet'}
+      </button>
+      
+      <CreateTaskForm onCreate={createTask} />
+      <TaskList tasks={tasks} />
+    </div>
+  );
+};
+
+const CreateTaskForm = ({ onCreate }: { onCreate: (desc: string, bounty: number) => void }) => {
+  const [description, setDescription] = useState('');
+  const [bounty, setBounty] = useState('');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onCreate(description, parseFloat(bounty));
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="mb-8">
+      <input
+        type="text"
+        placeholder="Task description"
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        className="border p-2 mr-2"
+      />
+      <input
+        type="number"
+        placeholder="Bounty (SON)"
+        value={bounty}
+        onChange={(e) => setBounty(e.target.value)}
+        className="border p-2 mr-2"
+      />
+      <button type="submit" className="bg-green-500 text-white p-2 rounded">
+        Create Task
+      </button>
+    </form>
+  );
+};
+
+const TaskList = ({ tasks }: { tasks: any[] }) => (
+  <div className="grid gap-4">
+    {tasks.map((task, index) => (
+      <div key={index} className="border p-4 rounded">
+        <h3 className="text-xl">{task.description}</h3>
+        <p>Bounty: {task.bounty} SON</p>
+        <p>Status: {task.status === 0 ? 'Open' : 'Completed'}</p>
+        <SubmitTaskForm taskId={index} />
+      </div>
+    ))}
+  </div>
+);
