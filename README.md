@@ -72,7 +72,7 @@ sudo apt install nodejs npm -y
 
 ```bash
 # Clone your project
-git clone https://github.com/yourusername/autotipper-bot.git
+git clone https://github.com/jesee-kuya/sonerium-challenge.git
 cd autotipper-bot
 npm install
 ```
